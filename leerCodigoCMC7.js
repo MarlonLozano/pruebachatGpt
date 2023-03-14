@@ -1,30 +1,23 @@
 const Tesseract = require('tesseract.js');
 const sharp = require('sharp');
+const { createWorker } = require('tesseract.js');
 
 async function leerCodigoCMC7(path) {
   console.log("ENTROOO");
   const image = sharp(path);
   const buffer = await image.toBuffer();
-
-  const resultado = await Tesseract.recognize('./assets/IMG_0049.jpg',{
-    lang: 'cmc7',
-    tessdata: './assets/'
-  }, {
-    tessedit_char_whitelist: '0123456789<>',
-    preserve_interword_spaces: true,
-    tessedit_zero_rejection: false,
-    tessedit_fix_fuzzy_spaces: false,
-    tessedit_fix_hyphens: false,
-    tessedit_fix_quotes: false,
-    tessedit_prefer_joined_punct: false,
+  const worker = await createWorker({
+    langPath: './assets',
+    lang: 'cmc7'
   });
-//console.log(resultado);
+  const data = worker.loadLanguage('cmc7');
+  const resultado = await Tesseract.recognize(buffer, worker.loadLanguage('cmc7'));
+  console.log(resultado.data.text);
   const texto = resultado.data.text.replace(/\n/g, '').replace(/\s/g, '');
-  console.log(resultado);
+  // console.log(resultado.data.text);
   const match = texto.match(/(<\d{5,}>)*/g);
-  
   const codigoCMC7 = match && match.length > 0 ? match[0] : null;
-
+  //console.log(codigoCMC7);
   return codigoCMC7;
 }
-module.exports=leerCodigoCMC7;
+module.exports = leerCodigoCMC7;
